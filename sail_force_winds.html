@@ -1,0 +1,163 @@
+<!doctype html>
+
+<head>
+	<title>Sail Force Winds</title>
+	<link rel="stylesheet" type="text/css" href="main.css">
+	<meta charset="utf-8">
+</head>
+<body>
+	<style media="screen">
+	  body {
+	    margin: 0;
+	  }
+
+	  .points {
+	    fill: red;
+	    stroke: #c00;
+	  }
+	</style>
+	<script src="http://d3js.org/d3.v3.min.js"></script>
+
+	<div style="height:70px;width:100%">
+	    <h1 style="margin-bottom:0">Sail Force Winds: An interactive explorer of the forces that make sailing possible</h1>
+	    <p style="margin-top:0">Created by Brian de Silva. *Insert some instructions here*. <br>Only tested in Google Chrome. View the source on <a href="https://github.com/briandesilva/sail_force_winds">GitHub</a>.</p>
+	</div>
+
+	<div class="labelType" style="position:absolute; margin-top: 30px">
+       <input type="radio" name="labelType" value="0" checked="checked">Radians<br>
+       <input type="radio" name="labelType" value="1">Degrees<br>
+       <input type="radio" name="labelType" value="2">Sin<br>
+       <input type="radio" name="labelType" value="3">Cos<br>
+   </div>
+
+
+	<div id="viz">
+		<svg id="force-diagram" width="500" height="500">
+			<circle cx="250" cy="250" r="5"></circle>
+			
+			<!-- Define arrow markers -->
+			<defs>
+			    <marker
+			      id="blue-arrow"
+			      markerUnits="strokeWidth"
+			      markerWidth="12"
+			      markerHeight="12"
+			      viewBox="0 0 12 12"
+			      refX="6"
+			      refY="6"
+			      orient="auto">
+			      <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: Blue;"></path>
+			    </marker>
+			    <marker
+			      id="black-arrow"
+			      markerUnits="strokeWidth"
+			      markerWidth="12"
+			      markerHeight="12"
+			      viewBox="0 0 12 12"
+			      refX="6"
+			      refY="6"
+			      orient="auto">
+			      <path d="M2,2 L10,6 L2,10 L6,6 L2,2" style="fill: Black;"></path>
+			    </marker>
+			</defs>
+		</svg>
+	</div>
+
+	<script charset="utf-8">
+		// The origin of our coordinate system
+
+		var x_orig = 250;
+		var y_orig = 250;
+
+
+		var origin = {"x": x_orig, "y": y_orig};
+
+		// The place we want the wind vector to originate
+		var wind_origin = {"x": origin.x, "y": origin.y - 150};
+
+		// Initial boat direction
+		var boat_heading = {"x": origin.x, "y": origin.y - 50};
+
+		// Initial sail direction
+		var sail_heading = {"x": origin.x - 50, "y": origin.y};
+
+		// Initial wind direction
+		var wind_heading = {"x": wind_origin.x, "y": wind_origin.y + 50};
+
+		// Accessor function for constructing lines
+		var lineFunction = d3.svg.line()
+								 .x(function(d) {return d.x; })
+								 .y(function(d) {return d.y; })
+								 .interpolate("linear");
+
+		// The svg container
+		var diagram = d3.select("#force-diagram");
+
+		// // Define a function for dragging the lines
+		// var drag = d3.behavior.drag()
+		// 	.origin(function(d), {return d; })
+		// 	.on('dragstart', drag)
+
+		// 
+		// Draw some lines
+		// 
+
+		// The boat direction
+		var boat_line = diagram.append("path")
+							   .attr("d",lineFunction([origin, boat_heading]))
+							   .attr("stroke","black")
+							   .attr("stroke-width",3)
+							   .attr("fill","none")
+							   .attr("marker-end", "url(#black-arrow)")
+							   .call(d3.behavior.drag()
+							   	.on("dragstart", dragStarted)
+							   	.on("drag",dragged)
+							   	.on("dragend",dragEnded));
+
+
+		// The sail
+		var sail_line = diagram.append("path")
+							   .attr("d",lineFunction([origin, sail_heading]))
+							   .attr("stroke","red")
+							   .attr("stroke-width",3)
+							   .attr("fill","none");
+
+	   // The wind
+	   var wind_line = diagram.append("path")
+	   					   .attr("d",lineFunction([wind_origin, wind_heading]))
+	   					   .attr("stroke","blue")
+	   					   .attr("stroke-width",3)
+	   					   .attr("fill","none")
+						   .attr("marker-end", "url(#blue-arrow)");
+
+
+		function dragStarted(d) {
+			d3.select(this).raise().classed("active",true);
+		}
+
+		function dragged(d) {
+			// d3.select(this).attr("d",lineFunction([origin, {"x": d3.event.x, "y": d3.event.y} ]));
+			var x = d3.event.dx;
+			var y = d3.event.dy;
+
+			var line = d3.select(this);
+
+			// Update the line
+			var attributes = {
+				x1: parseInt(line.attr('x1')),
+				y1: parseInt(line.attr('y1')),
+
+				x2: parseInt(line.attr('x2')) + x,
+				y2: parseInt(line.attr('y2')) + y,
+			};
+
+			line.attr(attributes);
+		}
+
+		function dragEnded(d) {
+			d3.select(this).classed("active",false);
+		}
+
+	</script>
+
+</body>
